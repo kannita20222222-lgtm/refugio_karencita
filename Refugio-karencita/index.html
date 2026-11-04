@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Un respiro para Karencita</title>
+    <style>
+        :root {
+            --bg-color: #fce4ec;
+            --wall-color: #f8bbd0;
+            --floor-color: #d7ccc8;
+            --accent-color: #ff80ab;
+            --text-color: #5d4037;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--wall-color); overflow: hidden;
+        }
+
+        /* Pantalla de Bienvenida */
+        .welcome-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+            color: var(--text-color); cursor: pointer; transition: opacity 1s ease;
+        }
+        .welcome-screen.hidden { opacity: 0; pointer-events: none; }
+        .welcome-screen h1 { font-size: 3rem; margin-bottom: 10px; color: var(--accent-color); text-align: center; padding: 0 20px;}
+        .welcome-screen p { font-size: 1.2rem; font-weight: bold; background: white; padding: 10px 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); animation: pulse 2s infinite; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* La Habitación */
+        .room {
+            width: 100vw; height: 100vh;
+            background: linear-gradient(to bottom, var(--wall-color) 65%, var(--floor-color) 65%);
+            position: relative; overflow: hidden;
+        }
+
+        .rain-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 40, 80, 0.25); pointer-events: none; opacity: 0; transition: opacity 1s ease; z-index: 10;
+        }
+        .rain-overlay.active { opacity: 1; }
+
+        /* Guirnaldas de luces */
+        .lights {
+            position: absolute; top: 15px; left: 0; width: 100%;
+            border-top: 2px solid #bdbdbd; display: flex; justify-content: space-around;
+            padding: 0 5vw; box-sizing: border-box;
+        }
+        .bulb-container { position: relative; transform-origin: top center; animation: swing 3s infinite ease-in-out; }
+        .bulb-container:nth-child(even) { animation-duration: 4s; }
+        .bulb-container:nth-child(3n) { animation-duration: 3.5s; }
+
+        .bulb {
+            position: relative; top: -2px; width: 12px; height: 18px; 
+            background-color: #fff9c4; border-radius: 50%; box-shadow: 0 0 15px #fff59d; animation: glow 1.5s infinite alternate;
+        }
+        .bulb::before { content: ''; position: absolute; top: -4px; left: 2px; width: 8px; height: 5px; background: #9e9e9e; border-radius: 2px; }
+        .bulb-container:nth-child(even) .bulb { animation-delay: 0.5s; background-color: #ffe082; box-shadow: 0 0 15px #ffe082; }
+
+        @keyframes swing { 0% { transform: rotate(-12deg); } 50% { transform: rotate(12deg); } 100% { transform: rotate(-12deg); } }
+        @keyframes glow { 0% { opacity: 0.6; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
+
+        /* Elementos Interactivos */
+        .interactive { position: absolute; cursor: pointer; transition: transform 0.2s ease, filter 0.2s ease; }
+        .interactive:hover { transform: scale(1.05); filter: brightness(1.1); }
+
+        /* 1. La Ventana */
+        .window {
+            top: 15vh; left: 5vw; width: 18vw; height: 35vh; min-width: 150px; min-height: 220px;
+            background-color: #bbdefb; border: 10px solid #fff; border-radius: 10px;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.5), 5px 5px 15px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap;
+        }
+        .window::after, .window::before { content: ''; position: absolute; background: #fff; }
+        .window::before { width: 100%; height: 10px; top: 50%; left: 0; transform: translateY(-50%); }
+        .window::after { height: 100%; width: 10px; left: 50%; top: 0; transform: translateX(-50%); }
+
+        /* 2. Póster Central (CARRUSEL) */
+        .poster {
+            top: 15vh; left: 34vw; width: 25vw; height: 35vh; min-width: 220px; min-height: 250px;
+            background-color: #fff; background-image: url('foto1.jpg'); background-size: cover; background-position: center;
+            border: 8px solid #fff; border-radius: 5px; box-shadow: 4px 4px 15px rgba(0,0,0,0.15);
+            transform: rotate(2deg); transition: opacity 0.5s ease; 
+        }
+
+        /* 3. El Corcho de Fotos */
+        .corkboard {
+            top: 18vh; right: 5vw; width: 25vw; height: 30vh; min-width: 250px; min-height: 180px;
+            background-color: #d7ccc8; border: 8px solid #8d6e63; border-radius: 5px;
+            display: flex; justify-content: space-around; align-items: center; padding: 15px; box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
+        }
+        .photo { width: 50px; height: 60px; background: #fff; padding: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); transform: rotate(-5deg); }
+        .photo:nth-child(2) { transform: rotate(8deg); }
+        .photo:nth-child(3) { transform: rotate(-2deg); }
+        .photo-inner { width: 100%; height: 45px; background: #ffb1cb; }
+
+        /* La Mesa */
+        .desk {
+            bottom: 25vh; left: 8vw; width: 45vw; height: 25px; min-width: 400px;
+            background-color: #8d6e63; border-radius: 10px; position: absolute; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+        .desk::after, .desk::before { content: ''; position: absolute; width: 20px; height: 25vh; background-color: #795548; top: 25px; }
+        .desk::before { left: 40px; } .desk::after { right: 40px; }
+
+        /* CAJÓN ROSADO (Ahora más grande) */
+        .drawer {
+            bottom: calc(25vh - 40px); /* Ajustado a la nueva altura */
+            left: 20vw; /* Empieza más a la izquierda */
+            width: 23vw; /* Más ancho */
+            min-width: 200px; /* Mínimo más grande */
+            height: 40px; /* Más alto */
+            background-color: #f8bbd0;
+            border-radius: 0 0 10px 10px; position: absolute; box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            border: 3px solid #f48fb1; border-top: none; z-index: 1;
+        }
+        .drawer::after { /* Manija del cajón */
+            content: ''; position: absolute; width: 50px; height: 8px; background-color: #d81b60;
+            border-radius: 5px; top: 12px; left: 50%; transform: translateX(-50%);
+        }
+
+        /* El Tocadiscos */
+        .record-player {
+            bottom: calc(25vh + 25px); left: 15vw; width: 100px; height: 75px; z-index: 3;
+            background-color: #e0e0e0; border: 5px solid #9e9e9e; border-radius: 5px; box-shadow: -3px 0 10px rgba(0,0,0,0.1);
+        }
+        .record { width: 65px; height: 65px; background-color: #212121; border-radius: 50%; position: absolute; top: 2px; left: 12px; border: 2px solid #424242; }
+        .record.spinning { animation: spin 2s linear infinite; }
+        .record::after { content: ''; position: absolute; width: 18px; height: 18px; background-color: var(--accent-color); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Bubble Tea */
+        .bubble-tea {
+            bottom: calc(25vh + 25px); left: 32vw; z-index: 3;
+            width: 40px; height: 60px; background-color: #ffecb3; 
+            border: 4px solid rgba(255,255,255, 0.8); border-radius: 5px 5px 20px 20px; box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+        }
+        .bubble-tea::before { 
+            content: ''; position: absolute; width: 8px; height: 45px; background-color: #ef5350;
+            top: -30px; left: 18px; transform: rotate(15deg); border-radius: 4px; z-index: -1;
+        }
+        .boba-pearls {
+            position: absolute; bottom: 5px; left: 6px; width: 7px; height: 7px; background-color: #3e2723; border-radius: 50%;
+            box-shadow: 12px 2px 0 #3e2723, 22px -1px 0 #3e2723, 6px -12px 0 #3e2723, 16px -10px 0 #3e2723, 12px -20px 0 #3e2723;
+        }
+
+        /* Lirio */
+        .lily-area {
+            bottom: calc(25vh + 25px); left: 45vw; width: 50px; height: 90px; position: absolute; z-index: 3;
+        }
+        .lily-pot {
+            width: 40px; height: 45px; background-color: #ce93d8; 
+            border-radius: 5px 5px 15px 15px; position: absolute; bottom: 0; left: 5px; box-shadow: inset -5px 0 10px rgba(0,0,0,0.1);
+        }
+        .lily-stem { position: absolute; bottom: 40px; left: 23px; width: 4px; height: 35px; background-color: #81c784; }
+        .lily-petal {
+            width: 16px; height: 35px; background-color: #fff; border-radius: 50% 50% 10% 10%; position: absolute; box-shadow: inset 0 -8px 8px #f8bbd0;
+        }
+        .lily-petal.center { bottom: 65px; left: 17px; }
+        .lily-petal.left { bottom: 55px; left: 7px; transform: rotate(-45deg); }
+        .lily-petal.right { bottom: 55px; left: 27px; transform: rotate(45deg); }
+        .lily-stamen { position: absolute; bottom: 70px; left: 24px; width: 2px; height: 15px; background-color: #ffca28; border-radius: 2px; }
+
+        /* Alfombra y Mascotas */
+        .rug { bottom: 8vh; right: 10vw; width: 35vw; height: 18vh; min-width: 300px; background-color: #e1bee7; border-radius: 50%; position: absolute; opacity: 0.9; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); z-index: 1; }
+        .dog-bed { bottom: 12vh; right: 28vw; width: 120px; height: 50px; background-color: #cfd8dc; border-radius: 50%; position: absolute; box-shadow: 0 5px 10px rgba(0,0,0,0.05); z-index: 2; }
+        .dog { bottom: 14vh; right: 29vw; width: 80px; height: 45px; background-color: #9e9e9e; border-radius: 30px 30px 10px 10px; font-size: 26px; text-align: center; line-height: 45px; z-index: 3; }
+        .cat-bed { bottom: 15vh; right: 15vw; width: 100px; height: 40px; background-color: #bcaaa4; border-radius: 50%; position: absolute; box-shadow: 0 5px 10px rgba(0,0,0,0.05); z-index: 2; }
+        .cat { bottom: 17vh; right: 16vw; width: 65px; height: 35px; background-color: #ff9800; border-radius: 30px 30px 10px 10px; font-size: 20px; text-align: center; line-height: 35px; z-index: 3; }
+
+        /* UI Messages */
+        .toast {
+            position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.95);
+            color: var(--text-color); padding: 15px 30px; border-radius: 30px; font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 20; box-shadow: 0 5px 20px rgba(0,0,0,0.15); text-align: center;
+        }
+        .toast.show { opacity: 1; }
+        .floating-heart { position: absolute; font-size: 28px; pointer-events: none; animation: float-heart 1.5s forwards; z-index: 15; }
+        @keyframes float-heart { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.5); opacity: 0; } }
+        
+        /* Modals Generales */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 30; padding: 20px; box-sizing: border-box;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: #fff; padding: 40px; border-radius: 20px; text-align: center; max-width: 550px; width: 100%; color: var(--text-color); box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+        .modal-content h2 { color: var(--accent-color); margin-top: 0; font-size: 1.8rem; }
+        .close-btn {
+            background: var(--accent-color); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 1rem; margin-top: 15px; margin-right: 5px;
+        }
+        .close-btn.secondary { background: #9e9e9e; }
+
+        /* Estilos de la Galería */
+        .gallery-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 20px; }
+        .gallery-thumb { width: 90px; height: 90px; object-fit: cover; border: 4px solid #fff; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s ease; border-radius: 5px; background-color: #ffb1cb; }
+        .gallery-thumb:hover { transform: scale(1.1) rotate(3deg); }
+        .viewer-image { max-width: 100%; max-height: 40vh; object-fit: contain; border: 8px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 5px; margin-bottom: 20px; }
+        .viewer-desc { font-size: 1.2rem; font-style: italic; font-weight: 500; color: #5d4037; padding: 0 15px; margin-bottom: 20px; }
+
+        /* Estilos de las Cartitas del Cajón */
+        .notes-grid {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 20px;
+            max-height: 50vh; overflow-y: auto; padding: 10px;
+        }
+        .note-paper {
+            background-color: #fff9c4; width: 100%; max-width: 220px; padding: 15px;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.15); border-radius: 2px 2px 15px 2px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-style: italic; color: #3e2723;
+            transform: rotate(-2deg); transition: transform 0.2s ease; cursor: pointer;
+            
+            /* Esto recorta el texto largo y le pone "..." en la vista previa */
+            display: -webkit-box;
+            -webkit-line-clamp: 4; /* Mostrar solo las primeras 4 líneas en la vista previa */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .note-paper:nth-child(even) { transform: rotate(3deg); background-color: #ffecb3; }
+        .note-paper:nth-child(3n) { transform: rotate(-1deg); background-color: #ffe082; }
+        .note-paper:hover { transform: scale(1.05) rotate(0deg); z-index: 5; }
+
+        /* Estilo para la Carta Extendida (Visor de Nota) */
+        .note-paper-full {
+            background-color: #fff9c4; width: 100%; padding: 30px;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.2); border-radius: 2px 2px 20px 2px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-style: italic; color: #3e2723;
+            font-size: 1.2rem; line-height: 1.6; text-align: left;
+            max-height: 60vh; overflow-y: auto; box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="welcome-screen" class="welcome-screen">
+        <h1>Hola, Karencita ❤️</h1>
+        <p>Haz clic en cualquier parte para entrar a tu refugio</p>
+    </div>
+
+    <div class="room" id="room">
+        <div class="rain-overlay" id="rain"></div>
+
+        <div class="lights">
+            <div class="bulb-container"><div class="bulb"></div></div>
+            <div class="bulb-container"><div class="bulb"></div></div>
+            <div class="bulb-container"><div class="bulb"></div></div>
+            <div class="bulb-container"><div class="bulb"></div></div>
+            <div class="bulb-container"><div class="bulb"></div></div>
+            <div class="bulb-container"><div class="bulb"></div></div>
+            <div class="bulb-container"><div class="bulb"></div></div>
+            <div class="bulb-container"><div class="bulb"></div></div>
+        </div>
+
+        <div class="interactive window" onclick="toggleRain()" title="Clima relajante"></div>
+        
+        <!-- PÓSTER CARRUSEL -->
+        <div id="poster-carousel" class="interactive poster" onclick="showToast('Tú puedes con todo, hermosa ✨')"></div>
+
+        <!-- CORCHO DE FOTOS -->
+        <div class="interactive corkboard" onclick="openModal('gallery')" title="Recuerdos">
+            <div class="photo"><div class="photo-inner"></div></div>
+            <div class="photo"><div class="photo-inner"></div></div>
+            <div class="photo"><div class="photo-inner"></div></div>
+        </div>
+
+        <!-- MESA Y CAJÓN -->
+        <div class="desk"></div>
+        <div class="interactive drawer" onclick="openModal('notes')" title="Cartitas para ti 💌"></div>
+
+        <!-- LIRIO -->
+        <div class="lily-area interactive" onclick="showToast('Un lirio hermoso, como tú 🌸')">
+            <div class="lily-stem"></div>
+            <div class="lily-petal left"></div>
+            <div class="lily-petal right"></div>
+            <div class="lily-petal center"></div>
+            <div class="lily-stamen"></div>
+            <div class="lily-pot"></div>
+        </div>
+
+        <!-- TOCADISCOS -->
+        <div class="interactive record-player" onclick="toggleMusic()" title="Música">
+            <div class="record" id="vinyl"></div>
+        </div>
+
+        <!-- BUBBLE TEA -->
+        <div class="interactive bubble-tea" onclick="showMessage()" title="Mensaje para ti">
+            <div class="boba-pearls"></div>
+        </div>
+
+        <!-- ALFOMBRA Y MASCOTAS -->
+        <div class="rug"></div>
+
+        <div class="dog-bed"></div>
+        <div class="interactive dog" onclick="petPrincesa(event)" title="Princesa">🐶</div>
+
+        <div class="cat-bed"></div>
+        <div class="interactive cat" onclick="petNicole(event)" title="Nicole">🐱</div>
+
+        <div class="toast" id="toast">Mensaje aquí</div>
+    </div>
+
+    <!-- Modal 1: Galería de Miniaturas -->
+    <div class="modal-overlay" id="modal-gallery">
+        <div class="modal-content">
+            <h2>Nuestros Recuerdos ❤️</h2>
+            <p>Haz clic en una foto para verla y leer su mensaje.</p>
+            <div class="gallery-grid" id="gallery-container"></div>
+            <button class="close-btn" onclick="closeModals()">Volver al cuarto</button>
+        </div>
+    </div>
+
+    <!-- Modal 2: Visor de Foto y Descripción -->
+    <div class="modal-overlay" id="modal-viewer">
+        <div class="modal-content">
+            <img id="viewer-img" src="" alt="Recuerdo" class="viewer-image">
+            <p id="viewer-text" class="viewer-desc"></p>
+            <button class="close-btn secondary" onclick="volverAGaleria()">Ver otras fotos</button>
+            <button class="close-btn" onclick="closeModals()">Volver al cuarto</button>
+        </div>
+    </div>
+
+    <!-- Modal 3: Mensaje del Bubble Tea -->
+    <div class="modal-overlay" id="modal-message">
+        <div class="modal-content">
+            <h2>Para ti ✨</h2>
+            <p id="random-msg" style="font-size: 1.3em; font-weight: 500;"></p>
+            <button class="close-btn" onclick="closeModals()">Sonreír y continuar</button>
+        </div>
+    </div>
+
+    <!-- Modal 4: Vista previa de Cartitas del Cajón -->
+    <div class="modal-overlay" id="modal-notes">
+        <div class="modal-content">
+            <h2>Cartitas para ti 💌</h2>
+            <p>Haz clic en cualquier notita para leer todo el mensaje.</p>
+            <div class="notes-grid" id="notes-container"></div>
+            <button class="close-btn" onclick="closeModals()">Guardar cartitas</button>
+        </div>
+    </div>
+
+    <!-- NUEVO Modal 5: Lector de Carta Completa -->
+    <div class="modal-overlay" id="modal-note-viewer">
+        <div class="modal-content" style="background: transparent; box-shadow: none;">
+            <div class="note-paper-full" id="full-note-text"></div>
+            <div style="margin-top: 20px;">
+                <button class="close-btn secondary" onclick="volverANotas()">Volver al cajón</button>
+                <button class="close-btn" onclick="closeModals()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUDIO -->
+    <audio id="bg-music" loop>
+        <source src="farid.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // --- LÓGICA DEL CARRUSEL (PÓSTER) ---
+        const posterElement = document.getElementById('poster-carousel');
+        
+        const arrayDeFotos = [
+            'smoking.jpg', 'smoking2.jpg', 'smoking3.jpg', 
+            'smoking4.jpg', 'smoking5.jpg', 'smoking7.jpg', 'smoking8.jpg'
+        ];
+        let indexFotoActual = 0;
+
+        function cambiarFotoPoster() {
+            indexFotoActual = (indexFotoActual + 1) % arrayDeFotos.length; 
+            posterElement.style.opacity = '0.8';
+            setTimeout(() => {
+                posterElement.style.backgroundImage = `url('${arrayDeFotos[indexFotoActual]}')`;
+                posterElement.style.opacity = '1';
+            }, 150); 
+        }
+        setInterval(cambiarFotoPoster, 5000);
+
+
+     // --- LÓGICA DE LA GALERÍA (CORCHO DE FOTOS) ---
+        const recuerdos = [
+            { 
+                src: 'minecraft.png', 
+                desc: '"Que ganas de continuar ese mundito oe jaksda, algún dia que estemos hueveando con fe seguimos el mundito."' 
+            },
+            { 
+                src: 'roblox.png', 
+                desc: '"Ver esas germas en cada jueguito de roblox que nos metemos es un baje kjaskjda, tambien te recuerdo que en ese juego te paro ganando causa."' 
+            },
+            { 
+                src: 'roblox2.png', 
+                desc: '"Me raye cuando me pasaste esa foto, "cuánto x la hora" jkaskjda. Ese día fue un baje, esos chibolos a cada rato pidiendo su cache"' 
+            },
+            { 
+                src: 'roblox3.png', 
+                desc: '"El único jueguito donde si me ganaste, quería mi revancha de esa vaina pero que feo te cerrabas oe"' 
+            }
+        ];
+
+        function cargarGaleria() {
+            const container = document.getElementById('gallery-container');
+            container.innerHTML = ''; 
+            recuerdos.forEach((recuerdo, index) => {
+                const img = document.createElement('img');
+                img.src = recuerdo.src; img.className = 'gallery-thumb'; img.title = 'Haz clic para ver más';
+                img.onclick = () => abrirVisor(index); container.appendChild(img);
+            });
+        }
+        cargarGaleria();
+
+        function abrirVisor(index) {
+            document.getElementById('modal-gallery').classList.remove('active');
+            document.getElementById('viewer-img').src = recuerdos[index].src;
+            document.getElementById('viewer-text').innerText = recuerdos[index].desc;
+            document.getElementById('modal-viewer').classList.add('active');
+        }
+
+        function volverAGaleria() {
+            document.getElementById('modal-viewer').classList.remove('active');
+            document.getElementById('modal-gallery').classList.add('active');
+        }
+
+
+        // --- LÓGICA DE LAS CARTITAS (CAJÓN ROSADO) ---
+        const cartitas = [
+            "Te quiero decir que no te falta nada, eres una gran mujer, un amor de persona, eres trabajadora, eres guapísima, te esfuerzas todos los días y tu corazón es noble, nunca dudes de ti.",
+            "No importa qué tan estresante sea la universidad o el trabajo, yo sé que tú puedes lograr todo lo que te propongas. Siempre estaré a tu lado apoyándote en cada paso.",
+            "Ojalá nunca se te olvide lo que haz logrado solita, lo valiosa que eres y sobre que todo que por todo el esfuerzo que haces te mereces lo mejor del mundo ",
+            "Eres una gran mujer, fuerte,valiente, leal, amor de persona. De las que sienten mucho, pero la que sigue de pie, de las que caen, se sacuden el miedo y continuan, aunque nadie este mirando. Eres generosa incluso cuando el mundo te ha quedado a deber. Tienes una luz tranquila que no hace ruido, pero que se nota en la forma en que cuidas, en como me escuchas, en como sigues dando aun cueando estas cansada. No necesitas demotras nada, porque tu historia, tus decisiones y tu manera de amar hablando mucho de ti. Y aunque no siempre te lo digan, tu presencia deja huella, tu corazon suma y tu existencía importa y me importa mas de lo que imaginas. "
+        ];
+
+        function cargarNotas() {
+            const container = document.getElementById('notes-container');
+            container.innerHTML = ''; 
+            cartitas.forEach((texto, index) => {
+                const div = document.createElement('div');
+                div.className = 'note-paper';
+                div.innerText = texto;
+                div.title = 'Haz clic para leer completa';
+                div.onclick = () => abrirNota(index); // Abre la nota en grande
+                container.appendChild(div);
+            });
+        }
+        cargarNotas();
+
+        function abrirNota(index) {
+            // Oculta el panel de mini-notas
+            document.getElementById('modal-notes').classList.remove('active');
+            // Carga el texto largo
+            document.getElementById('full-note-text').innerText = cartitas[index];
+            // Muestra el post-it gigante
+            document.getElementById('modal-note-viewer').classList.add('active');
+        }
+
+        function volverANotas() {
+            document.getElementById('modal-note-viewer').classList.remove('active');
+            document.getElementById('modal-notes').classList.add('active');
+        }
+
+
+        // --- MENSAJES BUBBLE TEA Y NOTIFICACIONES ---
+        const messages = [
+            "Sé que la universidad y el trabajo pesan hoy, pero eres increíble y puedes con todo.",
+            "Tómate un respiro, Karencita. Estoy muy orgulloso de ti.",
+            "No dejes que el estrés borre esa sonrisa tan linda que tienes.",
+            "Te preparé este rincón para que sepas que siempre tienes un lugar seguro conmigo.",
+            "Respira profundo. Un mal día no significa una mala vida, y yo estoy aquí para ti."
+        ];
+
+        let rainActive = false;
+        function toggleRain() {
+            rainActive = !rainActive;
+            document.getElementById('rain').classList.toggle('active');
+            showToast(rainActive ? "🌧️ Lluvia relajante activada" : "☀️ Ha salido el sol");
+        }
+
+        function showMessage() {
+            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+            document.getElementById('random-msg').innerText = randomMsg;
+            document.getElementById('modal-message').classList.add('active');
+        }
+
+        function openModal(id) { document.getElementById('modal-' + id).classList.add('active'); }
+        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+
+        function petPrincesa(e) { showToast("¡Guau! 🐾 (Princesa mueve la colita)"); spawnHeart(e, '🤍'); }
+        function petNicole(e) { showToast("¡Miau! 🐾 (Nicole te manda ronroneos)"); spawnHeart(e, '🧡'); }
+
+        function spawnHeart(e, emoji) {
+            const heart = document.createElement('div');
+            heart.classList.add('floating-heart'); heart.innerHTML = emoji;
+            heart.style.left = (e.clientX - 10) + 'px'; heart.style.top = (e.clientY - 20) + 'px';
+            document.body.appendChild(heart);
+            setTimeout(() => { heart.remove(); }, 1500);
+        }
+
+        let toastTimeout;
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            toast.innerText = text; toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 4000);
+        }
+
+        // --- SISTEMA DE AUDIO Y BIENVENIDA ---
+        const music = document.getElementById('bg-music');
+        let musicPlaying = false;
+        const vinyl = document.getElementById('vinyl');
+        const welcomeScreen = document.getElementById('welcome-screen');
+
+        welcomeScreen.addEventListener('click', () => {
+            welcomeScreen.classList.add('hidden');
+            music.play().then(() => {
+                musicPlaying = true;
+                vinyl.classList.add('spinning');
+                showToast("🎵 Reproduciendo: Lo-Fi relajante");
+            }).catch(e => console.log("Audio bloqueado:", e));
+        });
+
+        function toggleMusic() {
+            if (musicPlaying) {
+                music.pause(); musicPlaying = false; vinyl.classList.remove('spinning'); showToast("Música pausada 🔇");
+            } else {
+                music.play(); musicPlaying = true; vinyl.classList.add('spinning'); showToast("🎵 Reproduciendo: Lo-Fi relajante");
+            }
+        }
+    </script>
+</body>
+</html>
